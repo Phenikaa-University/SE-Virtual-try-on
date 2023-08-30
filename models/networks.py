@@ -1,120 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.parallel
-from torchvision import models
-from options.train_options import TrainOptions
+#from torchvision import models
+#from options.train_options import TrainOptions
 import os
-import functools
-from torch.nn.utils import spectral_norm
 
-opt = TrainOptions().parse()
-
-def set_requires_grad(nets, requires_grad=False):
-    if not isinstance(nets, list):
-        nets = [nets]
-    for net in nets:
-        if net is not None:
-            for param in net.parameters():
-                param.requires_grad = requires_grad
-
-
-class SpectralDiscriminator(nn.Module):
-    """Defines a PatchGAN discriminator"""
-
-    def __init__(self, opt, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d, use_sigmoid=False):
-        super(SpectralDiscriminator, self).__init__()
-        # no need to use bias as BatchNorm2d has affine parameters
-        if type(norm_layer) == functools.partial:
-            use_bias = norm_layer.func != nn.BatchNorm2d
-        else:
-            use_bias = norm_layer != nn.BatchNorm2d
-
-        kw = 4
-        padw = 1
-        sequence = [spectral_norm(nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw)),
-                    nn.LeakyReLU(0.2, True)]
-        nf_mult = 1
-        nf_mult_prev = 1
-        for n in range(1, n_layers):  # gradually increase the number of filters
-            nf_mult_prev = nf_mult
-            nf_mult = min(2 ** n, 8)
-            sequence += [
-                spectral_norm(nn.Conv2d(ndf * nf_mult_prev, ndf *
-                              nf_mult, kernel_size=kw, stride=2, padding=padw)),
-                # norm_layer(ndf * nf_mult),
-                nn.LeakyReLU(0.2, True)
-            ]
-
-        nf_mult_prev = nf_mult
-        nf_mult = min(2 ** n_layers, 8)
-        sequence += [
-            spectral_norm(nn.Conv2d(ndf * nf_mult_prev, ndf *
-                          nf_mult, kernel_size=kw, stride=1, padding=padw)),
-            # norm_layer(ndf * nf_mult),
-            nn.LeakyReLU(0.2, True)
-        ]
-
-        sequence += [spectral_norm(nn.Conv2d(ndf * nf_mult,
-                                   1, kernel_size=kw, stride=1, padding=padw))]
-        if use_sigmoid:
-            sequence += [nn.Sigmoid()]
-        self.model = nn.Sequential(*sequence)
-        self.old_lr = opt.lr_D
-
-    def forward(self, input):
-        """Standard forward."""
-        return self.model(input)
-
-    def update_learning_rate(self, optimizer, opt):
-        lrd = opt.lr_D / opt.niter_decay
-        lr = self.old_lr - lrd
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = lr
-        if opt.local_rank == 0:
-            print('update learning rate for D model: %f -> %f' %
-                  (self.old_lr, lr))
-        self.old_lr = lr
-
-
-# Defines the GAN loss which uses either LSGAN or the regular GAN.
-# When LSGAN is used, it is basically same as MSELoss,
-# but it abstracts away the need to create the target label tensor
-# that has the same size as the input
-class GANLoss(nn.Module):
-    def __init__(self, use_lsgan=True, gan_mode='lsgan', target_real_label=1.0, target_fake_label=0.0):
-        super(GANLoss, self).__init__()
-        self.register_buffer('real_label', torch.tensor(target_real_label))
-        self.register_buffer('fake_label', torch.tensor(target_fake_label))
-        if use_lsgan:
-            self.loss = nn.MSELoss()
-        else:
-            self.loss = nn.BCELoss()
-        assert gan_mode in ['lsgan', 'vanilla', 'wgangp']
-        if gan_mode in ['wgangp']:
-            self.loss = None
-        self.gan_mode = gan_mode
-
-    def get_target_tensor(self, input, target_is_real):
-        if target_is_real:
-            target_tensor = self.real_label
-        else:
-            target_tensor = self.fake_label
-        return target_tensor.expand_as(input)
-
-    def __call__(self, prediction, target_is_real, add_gradient=False):
-        if self.gan_mode in ['lsgan', 'vanilla']:
-            target_tensor = self.get_target_tensor(prediction, target_is_real)
-            loss = self.loss(prediction, target_tensor)
-        elif self.gan_mode == 'wgangp':
-            if target_is_real:
-                loss = -prediction.mean()  # + 0.001*(prediction**2).mean()
-                if add_gradient:
-                    loss = -prediction.mean() + 0.001*(prediction**2).mean()
-            else:
-                loss = prediction.mean()
-        return loss
-
-
+#opt = TrainOptions().parse()
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_features=64, norm_layer=nn.BatchNorm2d):
@@ -158,8 +49,6 @@ class ResUnetGenerator(nn.Module):
         unet_block = ResUnetSkipConnectionBlock(output_nc, ngf, input_nc=input_nc, submodule=unet_block, outermost=True, norm_layer=norm_layer)
 
         self.model = unet_block
-        self.old_lr = opt.lr
-        self.old_lr_gmm = 0.1*opt.lr
 
     def forward(self, input):
         return self.model(input)
@@ -304,7 +193,7 @@ def load_checkpoint_part_parallel(model, checkpoint_path):
     checkpoint = torch.load(checkpoint_path,map_location='cuda:{}'.format(opt.local_rank))
     checkpoint_new = model.state_dict()
     for param in checkpoint_new:
-        if 'cond_' not in param and 'aflow_net.netRefine' not in param:
+        if 'cond_' not in param and 'aflow_net.netRefine' not in param or 'aflow_net.cond_style' in param:
             checkpoint_new[param] = checkpoint[param]
     model.load_state_dict(checkpoint_new)
 
@@ -322,40 +211,3 @@ def load_checkpoint(model, checkpoint_path):
     model.load_state_dict(checkpoint_new)
 
 
-
-class NetworkBase(nn.Module):
-    def __init__(self):
-        super(NetworkBase, self).__init__()
-        self._name = 'BaseNetwork'
-
-    @property
-    def name(self):
-        return self._name
-
-    def init_weights(self):
-        self.apply(self._weights_init_fn)
-
-    def _weights_init_fn(self, m):
-        classname = m.__class__.__name__
-        if classname.find('Conv') != -1:
-            m.weight.data.normal_(0.0, 0.02)
-            if hasattr(m.bias, 'data'):
-                m.bias.data.fill_(0)
-        elif classname.find('BatchNorm2d') != -1:
-            m.weight.data.normal_(1.0, 0.02)
-            m.bias.data.fill_(0)
-
-    def _get_norm_layer(self, norm_type='batch'):
-        if norm_type == 'batch':
-            norm_layer = functools.partial(nn.BatchNorm2d, affine=True)
-        elif norm_type == 'instance':
-            norm_layer = functools.partial(nn.InstanceNorm2d, affine=False)
-        elif norm_type == 'batchnorm2d':
-            norm_layer = nn.BatchNorm2d
-        else:
-            raise NotImplementedError('normalization layer [%s] is not found' % norm_type)
-
-        return norm_layer
-
-    def forward(self, *input):
-        raise NotImplementedError
