@@ -36,7 +36,6 @@ def make_dataset_test(dir):
         else:
             img = str(i) + '.jpg'
         path = os.path.join(dir, img)
-        #print(path)
         images.append(path)
     return images
 

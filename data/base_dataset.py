@@ -26,8 +26,7 @@ def get_params(opt, size):
 
     x = random.randint(0, np.maximum(0, new_w - opt.fineSize))
     y = random.randint(0, np.maximum(0, new_h - opt.fineSize))
-    
-    #flip = random.random() > 0.5
+
     flip = 0
     return {'crop_pos': (x, y), 'flip': flip}
 
@@ -68,9 +67,7 @@ def get_transform(opt, params, method=Image.BICUBIC, normalize=True):
         transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], opt.fineSize)))
 
     if opt.resize_or_crop == 'none':
-        base = float(2 ** opt.n_downsample_global)
-        if opt.netG == 'local':
-            base *= (2 ** opt.n_local_enhancers)
+        base = float(16)
         transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base, method)))
 
     if opt.isTrain and not opt.no_flip:
