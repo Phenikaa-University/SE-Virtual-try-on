@@ -28,6 +28,8 @@ Hình 1: Hình ảnh demo với áo được mặc thử ở góc trái bên dư
 - Tạo ra trang web có thể giúp người dùng thử quần áo mà họ mong muốn không cần mất công ra cửa hàng trực tiếp thử đồ.
 - Có thể giúp các nhà thiết kế có thể tự lựa chọn mẫu ưa thích rồi tìm ra ý tưởng của mình giúp giảm thiểu chi phí thuê người mẫu.
 
+Link checkpoints(https://daihocphenikaa-my.sharepoint.com/:f:/g/personal/aiot_phenikaa-uni_edu_vn/EjGKgllwjCRMvu1-pRAT5U0Bjy0IeY_qskQl--LlGJm7Xg?e=d9Gz05)
+
 # Quickstart Guide
 
 ---
