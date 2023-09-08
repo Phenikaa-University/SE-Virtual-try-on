@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from tqdm.auto import tqdm
 import numpy as np
 from util import flow_util
-
+from PIL import Image
 opt = TestOptions().parse()
 
 f2c = flow_util.flow2color()
@@ -62,8 +62,6 @@ def get_result_images():
 
     result_images = []
     for i, data in tqdm(enumerate(dataset)):
-
-
         real_image = data['image']
         clothes = data['clothes']
         ##edge is extracted from the clothes image with the built-in function in python
