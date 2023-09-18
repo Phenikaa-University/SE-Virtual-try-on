@@ -1,4 +1,3 @@
-input.png 003434_1.jpg
 input.png 006026_1.jpg
 input.png 010567_1.jpg
 input.png 014396_1.jpg
