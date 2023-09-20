@@ -9,17 +9,18 @@ import os
 human_image_names = sorted([fn[:-4] for fn in os.listdir('dataset/upload_img')])
 
 st.title('Virtual-Try-On Demo')
-st.header('Upload form')
+st.header('Upload your own images')
 
 col1, col2, col3 = st.columns(3)
 with col1:
-    human_file = st.file_uploader("Upload a Human Image", type=["png", "jpg", "jpeg"])
-    if human_file is None:
-        human_file = 'dataset/upload_img/upload_img.png'
-    st.warning("Upload a Human Image in the side for Virtual-Try-On")
-    human = Image.open(human_file)
-    human.save('dataset/upload_img/upload_img.png')
-    st.image(human, width=150)
+    if st.checkbox("Upload a Human Image"):
+        human_file = st.file_uploader("Upload a Human Image", type=["png", "jpg", "jpeg"])
+        if human_file is None:
+            human_file = 'dataset/upload_img/upload_img.png'
+        st.warning("Upload a Human Image in the side for Virtual-Try-On")
+        human = Image.open(human_file)
+        human.save('dataset/upload_img/upload_img.png')
+        st.image(human, width=150)
 
     if st.checkbox('Live camera'):
         photo = st.camera_input('Take a photo')
@@ -31,20 +32,31 @@ with col1:
             photo.save('dataset/upload_img/upload_img.png')
 
 with col2:
-    clothes_file = st.file_uploader("Upload a Clothes Image", type=["png", "jpg", "jpeg"])
-    if clothes_file is None:
-        clothes_file = 'dataset/upload_clothes/upload.jpg'
+    if st.checkbox("Upload a Clothes Image"):
+        clothes_file = st.file_uploader("Upload a Clothes Image", type=["png", "jpg", "jpeg"])
+        if clothes_file is None:
+            clothes_file = 'dataset/upload_clothes/upload.jpg'
 
-    st.warning("Upload a Cloth Image in the side for Virtual-Try-On")
-    clothes = Image.open(clothes_file)
-    clothes.save('dataset/upload_clothes/upload.jpg')
-    extract_edges()
-    st.image(clothes, width=150)
+        st.warning("Upload a Cloth Image in the side for Virtual-Try-On")
+        clothes = Image.open(clothes_file)
+        clothes.save('dataset/upload_clothes/upload.jpg')
+        extract_edges()
+        st.image(clothes, width=150)
+    if st.checkbox("Select a Clothes Image"):
+        cloth_image_names = sorted([fn[:-4] for fn in os.listdir('dataset/test_clothes')])
+        cloth_image_name = st.selectbox("Choose a Clothes Image", cloth_image_names)
+        cloth_file = f'dataset/test_clothes/{cloth_image_name}.jpg'
+        cloth = Image.open(cloth_file)
+        cloth.save('dataset/upload_clothes/upload.jpg')
+        extract_edges()
+        st.image(cloth, width=150)
+        st.warning("Select a Clothes Image in the side for Virtual-Try-On")
+
 with col3:
     result_images = get_upload_images()
 
     st.write('Result')
-    st.image(result_images, width=150)
+    st.image(result_images, width=200)
 
 
 

@@ -5,27 +5,9 @@ import os
 
 
 
-human_image_names = sorted([fn[:-4] for fn in os.listdir('dataset/upload_img')])
-
 st.title('Virtual-Try-On Demo')
 
-if st.sidebar.checkbox('Upload'):
-    human_file = st.sidebar.file_uploader("Upload a Human Image", type=["png", "jpg", "jpeg"])
-    if human_file is None:
-        human_file = 'dataset/upload_img/upload_img.png'
-else:
-    human_image_name = st.sidebar.selectbox("Choose a Human Image", human_image_names)
-    human_file = f'dataset/upload_img/{human_image_name}.png'
-    if not os.path.exists(human_file):
-        human_file = human_file.replace('.png', '.jpg')
-    st.warning("Upload a Human Image in the sidebar for Virtual-Try-On")
 
-human = Image.open(human_file)
-human.save('dataset/upload_img/upload_img.png')
-st.sidebar.image(human, width=300)
-
-result_images = get_upload_images()
-st.image(result_images, width=600)
 
 with st.form('feedback_form'):
     st.header('Feedback form')
