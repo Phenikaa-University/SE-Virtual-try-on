@@ -3,7 +3,7 @@ import streamlit as st
 from PIL import Image
 import cv2
 from extract_clothes_edges import extract_edges
-from inference import get_demo_images
+from inference import get_upload_images
 import streamlit as st
 from PIL import Image
 import os
@@ -24,7 +24,7 @@ with col1:
     st.warning("Select a Human Image in the side for Virtual-Try-On")
 
     human = Image.open(human_file)
-    human.save('dataset/test_img/input.png')
+    human.save('dataset/upload_img/upload_img.png')
     st.image(human, width=150)
 
 with col2:
@@ -34,12 +34,14 @@ with col2:
     #     cloth_file = cloth_file.replace('.jpg', '.png')
     st.warning("Select a Clothes Image in the side for Virtual-Try-On")
     cloth = Image.open(cloth_file)
-    cloth.save('dataset/test_clothes/cloth.jpg')
+    cloth.save('dataset/upload_clothes/upload.jpg')
     extract_edges(demo=True)
     st.image(cloth, width=150)
 
-result_images = get_demo_images()
-st.image(result_images, width=300)
+with col3:
+    st.write('Result')
+    result_images = get_upload_images()
+    st.image(result_images, width=150)
 
 with st.form('feedback_form'):
     st.header('Feedback form')
