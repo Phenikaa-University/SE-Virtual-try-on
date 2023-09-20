@@ -11,6 +11,15 @@ def CreateDataset(opt):
     dataset.initialize(opt)
     return dataset
 
+def CreateDatasetUpload(opt):
+    dataset = None
+    from data.aligned_dataset_upload import AlignedDatasetUpload
+    dataset = AlignedDatasetUpload()
+
+    print("dataset [%s] was created" % (dataset.name()))
+    dataset.initialize(opt)
+    return dataset
+
 class CustomDatasetDataLoader(BaseDataLoader):
     def name(self):
         return 'CustomDatasetDataLoader'
@@ -18,6 +27,25 @@ class CustomDatasetDataLoader(BaseDataLoader):
     def initialize(self, opt):
         BaseDataLoader.initialize(self, opt)
         self.dataset = CreateDataset(opt)
+        self.dataloader = torch.utils.data.DataLoader(
+            self.dataset,
+            batch_size=opt.batchSize,
+            shuffle=not opt.serial_batches,
+            num_workers=int(opt.nThreads))
+
+    def load_data(self):
+        return self.dataloader
+
+    def __len__(self):
+        return min(len(self.dataset), self.opt.max_dataset_size)
+
+class CustomDatasetUploadDataLoader(BaseDataLoader):
+    def name(self):
+        return 'CustomDatasetUploadDataLoader'
+
+    def initialize(self, opt):
+        BaseDataLoader.initialize(self, opt)
+        self.dataset = CreateDatasetUpload(opt)
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,
             batch_size=opt.batchSize,
