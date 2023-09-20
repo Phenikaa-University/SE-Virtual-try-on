@@ -4,10 +4,15 @@ import cv2
 import numpy as np
 from tqdm.auto import tqdm
 
-def extract_edges():
+def extract_edges(demo=False):
 
-    clothes_dir = 'dataset/test_clothes'
-    clothes_edges_dir = 'dataset/test_edge'
+    if demo:
+        clothes_dir = 'dataset/upload_clothes'
+        clothes_edges_dir = 'dataset/upload_edge'
+    else:
+
+        clothes_dir = 'dataset/upload_clothes'
+        clothes_edges_dir = 'dataset/upload_edge'
 
 
     for img_fn in tqdm(os.listdir(clothes_dir)):
@@ -30,4 +35,3 @@ def extract_edges():
         cloth_edges_img_fp = os.path.join(clothes_edges_dir, img_fn)
         cv2.imwrite(cloth_edges_img_fp, mask2)
 
-extract_edges()

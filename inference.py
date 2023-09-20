@@ -96,8 +96,8 @@ def get_demo_images():
         # c = warped_cloth.cuda()
         d = p_tryon
         # combine = torch.cat([a[0],b[0], flow_color, c[0], d[0]], 2).squeeze()
-        combine = torch.cat([b[0], d[0]], 2).squeeze()
-        cv_img = (combine.permute(1, 2, 0).detach().cpu().numpy() + 1) / 2
+        # combine = torch.cat([b[0], d[0]], 2).squeeze()
+        cv_img = (d.permute(0, 2, 3, 1).squeeze().detach().cpu().numpy() + 1) / 2
         rgb = (cv_img * 255).astype(np.uint8)
 
 
@@ -138,8 +138,9 @@ def get_upload_images():
         # c = warped_cloth.cuda()
         d = p_tryon
         # combine = torch.cat([a[0],b[0], flow_color, c[0], d[0]], 2).squeeze()
-        combine = torch.cat([b[0], d[0]], 2).squeeze()
-        cv_img = (combine.permute(1, 2, 0).detach().cpu().numpy() + 1) / 2
+        # combine = torch.cat([b[0], d[0]], 2).squeeze()
+        # cv_img = (combine.permute(1, 2, 0).detach().cpu().numpy() + 1) / 2
+        cv_img = (d.permute(0, 2, 3, 1).squeeze().detach().cpu().numpy() + 1) / 2
         rgb = (cv_img * 255).astype(np.uint8)
 
 
