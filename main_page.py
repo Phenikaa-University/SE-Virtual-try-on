@@ -9,7 +9,6 @@ from PIL import Image
 import os
 
 
-
 human_image_names = sorted([fn[:-4] for fn in os.listdir('dataset/test_img')])
 cloth_image_names = sorted([fn[:-4] for fn in os.listdir('dataset/test_clothes')])
 
