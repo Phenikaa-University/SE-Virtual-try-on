@@ -28,6 +28,11 @@ with col1:
         if photo is not None:
             st.subheader('You:')
             photo = Image.open(photo)
+            photo = photo.resize((192, 256))
+            # params = get_params(opt, I.size)
+            # transform = get_transform(opt, params)
+            # transform_E = get_transform(opt, params, method=Image.NEAREST, normalize=False)
+            # I_tensor = transform(I)
             st.image(photo, width=150)
             photo.save('dataset/upload_img/upload_img.png')
 
